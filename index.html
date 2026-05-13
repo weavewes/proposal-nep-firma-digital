@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firma Digital de NEPs | Propuesta Técnica</title>
+    <meta name="description" content="Sistema de firma digital para Notas de Encargo Programadas (NEPs). Transforma tu proceso de firma en papel a digital con OTP.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+        :root {
+            --color-bg: #f7f4ed;
+            --color-bg-alt: #eceae4;
+            --color-text: #1c1c1c;
+            --color-text-light: #4a4a4a;
+            --color-text-muted: #6b6b6b;
+            --color-accent: #1c1c1c;
+            --color-accent-hover: #333333;
+            --color-white: #ffffff;
+            --color-border: #d4d0c8;
+            --color-success: #2d6a4f;
+            --color-warning: #b35900;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(247, 244, 237, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--color-border);
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 0.75rem 0;
+            box-shadow: 0 1px 20px rgba(0,0,0,0.06);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-text);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--color-text-light);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            letter-spacing: 0.01em;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-text);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        /* Sections */
+        section {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+        }
+
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: var(--color-text-light);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            line-height: 1.7;
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(28,28,28,0.03) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--color-bg-alt);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--color-text-light);
+            margin-bottom: 2rem;
+            border: 1px solid var(--color-border);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.03em;
+        }
+
+        .hero h1 span {
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        .hero-description {
+            font-size: 1.125rem;
+            color: var(--color-text-light);
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+            max-width: 500px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            letter-spacing: 0.01em;
+        }
+
+        .btn-primary {
+            background: var(--color-accent);
+            color: var(--color-white);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(28,28,28,0.15);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--color-text);
+            border: 1.5px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--color-text);
+            transform: translateY(-2px);
+        }
+
+        .hero-visual {
+            position: relative;
+        }
+
+        .hero-card {
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            border: 1px solid var(--color-border);
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .hero-card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--color-bg-alt);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text);
+        }
+
+        .hero-card h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .hero-card h4 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.875rem;
+            background: rgba(45, 106, 79, 0.1);
+            color: var(--color-success);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--color-success);
+            border-radius: 50%;
+        }
+
+        .hero-card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .mini-card {
+            background: var(--color-bg);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .mini-card .number {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-text);
+            display: block;
+        }
+
+        .mini-card .label {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Problem vs Solution */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            margin-top: 3rem;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+
+        .comparison-box {
+            padding: 3rem;
+        }
+
+        .comparison-box.problem {
+            background: var(--color-bg-alt);
+        }
+
+        .comparison-box.solution {
+            background: var(--color-white);
+        }
+
+        .comparison-box h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .comparison-box.problem h3 {
+            color: var(--color-warning);
+        }
+
+        .comparison-box.solution h3 {
+            color: var(--color-success);
+        }
+
+        .comparison-list {
+            list-style: none;
+        }
+
+        .comparison-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            font-size: 0.95rem;
+            color: var(--color-text-light);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .comparison-list li:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-list li i {
+            margin-top: 0.2rem;
+            flex-shrink: 0;
+        }
+
+        /* Flow Section */
+        .flow-section {
+            background: var(--color-white);
+            margin: 0;
+            max-width: 100%;
+            padding: 6rem 2rem;
+        }
+
+        .flow-section .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .flow-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 3rem;
+            position: relative;
+        }
+
+        .flow-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .flow-step-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--color-bg);
+            border: 2px solid var(--color-border);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: var(--color-text);
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover .flow-step-icon {
+            border-color: var(--color-text);
+            transform: scale(1.05);
+        }
+
+        .flow-step h4 {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-step p {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        .flow-arrow {
+            color: var(--color-border);
+            flex-shrink: 0;
+        }
+
+        /* Benefits */
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .benefit-card {
+            background: var(--color-white);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.06);
+            border-color: var(--color-text);
+        }
+
+        .benefit-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--color-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+            color: var(--color-text);
+        }
+
+        .benefit-card h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .benefit-card p {
+            font-size: 0.875rem;
+            color: var(--color-text-light);
+            line-height: 1.6;
+        }
+
+        /* Architecture */
+        .arch-section {
+            background: var(--color-bg-alt);
+            margin: 0;
+            max-width: 100%;
+            padding: 6rem 2rem;
+        }
+
+        .arch-section .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .arch-diagram {
+            background: var(--color-white);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 3rem;
+            margin-top: 3rem;
+        }
+
+        .arch-row {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .arch-component {
+            background: var(--color-bg);
+            border: 1.5px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1.25rem 1.75rem;
+            text-align: center;
+            min-width: 160px;
+            transition: all 0.3s ease;
+        }
+
+        .arch-component:hover {
+            border-color: var(--color-text);
+            transform: translateY(-2px);
+        }
+
+        .arch-component .icon {
+            margin-bottom: 0.5rem;
+            color: var(--color-text);
+        }
+
+        .arch-component h4 {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .arch-component .tag {
+            font-size: 0.7rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .arch-connector {
+            text-align: center;
+            color: var(--color-text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* Stack */
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .stack-card {
+            background: var(--color-white);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stack-card:hover {
+            border-color: var(--color-text);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.06);
+        }
+
+        .stack-logo {
+            width: 48px;
+            height: 48px;
+            background: var(--color-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: var(--color-text);
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        .stack-card h4 {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .stack-card p {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Costs */
+        .costs-section {
+            background: var(--color-white);
+            margin: 0;
+            max-width: 100%;
+            padding: 6rem 2rem;
+        }
+
+        .costs-section .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .cost-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .cost-card {
+            border: 1.5px solid var(--color-border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cost-card.current {
+            background: var(--color-bg);
+        }
+
+        .cost-card.proposed {
+            background: var(--color-text);
+            color: var(--color-white);
+            border-color: var(--color-text);
+        }
+
+        .cost-card.proposed h3,
+        .cost-card.proposed .cost-amount,
+        .cost-card.proposed .cost-note,
+        .cost-card.proposed li {
+            color: var(--color-white);
+        }
+
+        .cost-card .badge {
+            display: inline-block;
+            padding: 0.375rem 0.875rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+        }
+
+        .cost-card.current .badge {
+            background: var(--color-border);
+            color: var(--color-text);
+        }
+
+        .cost-card.proposed .badge {
+            background: rgba(255,255,255,0.2);
+            color: var(--color-white);
+        }
+
+        .cost-card h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .cost-amount {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .cost-note {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .cost-card ul {
+            list-style: none;
+        }
+
+        .cost-card li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .cost-card.proposed li {
+            border-bottom-color: rgba(255,255,255,0.2);
+        }
+
+        .cost-card li:last-child {
+            border-bottom: none;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin-top: 3rem;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--color-border);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .timeline-dot {
+            width: 50px;
+            height: 50px;
+            background: var(--color-white);
+            border: 2px solid var(--color-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            z-index: 2;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .timeline-content {
+            background: var(--color-white);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1.75rem;
+            flex: 1;
+        }
+
+        .timeline-content h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-content p {
+            font-size: 0.875rem;
+            color: var(--color-text-light);
+        }
+
+        .timeline-meta {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--color-bg);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            margin-top: 1rem;
+        }
+
+        /* CTA */
+        .cta-section {
+            background: var(--color-text);
+            color: var(--color-white);
+            margin: 0;
+            max-width: 100%;
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .cta-section .section-inner {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.125rem;
+            opacity: 0.8;
+            margin-bottom: 2.5rem;
+        }
+
+        .cta-section .btn-primary {
+            background: var(--color-white);
+            color: var(--color-text);
+        }
+
+        .cta-section .btn-primary:hover {
+            background: var(--color-bg);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--color-bg-alt);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--color-border);
+        }
+
+        footer p {
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+        }
+
+        footer .logo {
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .delay-4 { animation-delay: 0.4s; opacity: 0; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .hero h1 {
+                font-size: 2.25rem;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-grid {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stack-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .cost-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .arch-row {
+                flex-wrap: wrap;
+            }
+
+            section {
+                padding: 4rem 1.5rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">Weaves</a>
+            <ul class="nav-links">
+                <li><a href="#problematica">Problemática</a></li>
+                <li><a href="#flujo">Flujo</a></li>
+                <li><a href="#beneficios">Beneficios</a></li>
+                <li><a href="#arquitectura">Arquitectura</a></li>
+                <li><a href="#costes">Costes</a></li>
+                <li><a href="#timeline">Timeline</a></li>
+            </ul>
+            <button class="mobile-menu-btn" aria-label="Menú">
+                <i data-lucide="menu" style="width:24px;height:24px"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero" id="problematica">
+        <div class="hero-bg"></div>
+        <div class="hero-grid" style="max-width:1200px;margin:0 auto;width:100%;padding:0 2rem;">
+            <div>
+                <div class="hero-badge animate-in">
+                    <i data-lucide="file-signature" style="width:16px;height:16px"></i>
+                    Propuesta Técnica 2025
+                </div>
+                <h1 class="animate-in delay-1">De la firma en papel <span>al futuro digital</span></h1>
+                <p class="hero-description animate-in delay-2">
+                    Sistema de firma digital para Notas de Encargo Programadas (NEPs). 
+                    Elimina el papel, el escaneo y los retrasos. Validez legal con OTP por SMS.
+                </p>
+                <div class="animate-in delay-3" style="display:flex;gap:1rem;flex-wrap:wrap;">
+                    <a href="#flujo" class="btn btn-primary">
+                        Ver propuesta
+                        <i data-lucide="arrow-down" style="width:16px;height:16px"></i>
+                    </a>
+                    <a href="#timeline" class="btn btn-secondary">
+                        Timeline
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual animate-in delay-2">
+                <div class="hero-card">
+                    <div class="hero-card-header">
+                        <div class="hero-card-icon">
+                            <i data-lucide="shield-check" style="width:24px;height:24px"></i>
+                        </div>
+                        <div>
+                            <h3>Firma Digital</h3>
+                            <h4>NEP #2847</h4>
+                        </div>
+                        <span class="status-badge">Completada</span>
+                    </div>
+                    <div class="hero-card-grid">
+                        <div class="mini-card">
+                            <span class="number">30-60</span>
+                            <span class="label">NEPs/mes</span>
+                        </div>
+                        <div class="mini-card">
+                            <span class="number">< 2min</span>
+                            <span class="label">por firma</span>
+                        </div>
+                        <div class="mini-card">
+                            <span class="number">100%</span>
+                            <span class="label">trazable</span>
+                        </div>
+                        <div class="mini-card">
+                            <span class="number">Legal</span>
+                            <span class="label">validez UE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem vs Solution -->
+    <section>
+        <div class="section-label">Problemática</div>
+        <h2 class="section-title">El proceso actual consume tiempo y recursos</h2>
+        <p class="section-subtitle">
+            Cada NEP requiere múltiples pasos manuales que ralentizan la operación y generan fricción innecesaria.
+        </p>
+
+        <div class="comparison-grid">
+            <div class="comparison-box problem">
+                <h3>
+                    <i data-lucide="alert-triangle" style="width:18px;height:18px"></i>
+                    Proceso Actual
+                </h3>
+                <ul class="comparison-list">
+                    <li>
+                        <i data-lucide="x" style="width:16px;height:16px;color:var(--color-warning)"></i>
+                        Impresión física del documento NEP
+                    </li>
+                    <li>
+                        <i data-lucide="x" style="width:16px;height:16px;color:var(--color-warning)"></i>
+                        Firma manual en papel
+                    </li>
+                    <li>
+                        <i data-lucide="x" style="width:16px;height:16px;color:var(--color-warning)"></i>
+                        Escaneo del documento firmado
+                    </li>
+                    <li>
+                        <i data-lucide="x" style="width:16px;height:16px;color:var(--color-warning)"></i>
+                        Envío por correo electrónico
+                    </li>
+                    <li>
+                        <i data-lucide="x" style="width:16px;height:16px;color:var(--color-warning)"></i>
+                        Almacenamiento en carpetas locales
+                    </li>
+                    <li>
+                        <i data-lucide="x" style="width:16px;height:16px;color:var(--color-warning)"></i>
+                        Sin trazabilidad ni auditoría
+                    </li>
+                </ul>
+            </div>
+            <div class="comparison-box solution">
+                <h3>
+                    <i data-lucide="check-circle" style="width:18px;height:18px"></i>
+                    Solución Propuesta
+                </h3>
+                <ul class="comparison-list">
+                    <li>
+                        <i data-lucide="check" style="width:16px;height:16px;color:var(--color-success)"></i>
+                        Generación digital del NEP
+                    </li>
+                    <li>
+                        <i data-lucide="check" style="width:16px;height:16px;color:var(--color-success)"></i>
+                        Firma con OTP verificado por SMS
+                    </li>
+                    <li>
+                        <i data-lucide="check" style="width:16px;height:16px;color:var(--color-success)"></i>
+                        Sin impresión ni escaneo
+                    </li>
+                    <li>
+                        <i data-lucide="check" style="width:16px;height:16px;color:var(--color-success)"></i>
+                        Envío automático al firmante
+                    </li>
+                    <li>
+                        <i data-lucide="check" style="width:16px;height:16px;color:var(--color-success)"></i>
+                        Almacenamiento seguro en cloud
+                    </li>
+                    <li>
+                        <i data-lucide="check" style="width:16px;height:16px;color:var(--color-success)"></i>
+                        Trazabilidad completa y auditoría
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Flow -->
+    <section class="flow-section" id="flujo">
+        <div class="section-inner">
+            <div class="section-label">Flujo de Trabajo</div>
+            <h2 class="section-title">De Zunzun a la firma en 5 pasos</h2>
+            <p class="section-subtitle">
+                El proceso se integra con su sistema legacy existente, minimizando el cambio operativo.
+            </p>
+
+            <div class="flow-grid">
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i data-lucide="database" style="width:28px;height:28px"></i>
+                    </div>
+                    <h4>Zunzun</h4>
+                    <p>Genera el NEP</p>
+                </div>
+                <div class="flow-arrow">
+                    <i data-lucide="arrow-right" style="width:20px;height:20px"></i>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i data-lucide="cpu" style="width:28px;height:28px"></i>
+                    </div>
+                    <h4>API Bridge</h4>
+                    <p>Transforma datos</p>
+                </div>
+                <div class="flow-arrow">
+                    <i data-lucide="arrow-right" style="width:20px;height:20px"></i>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i data-lucide="file-text" style="width:28px;height:28px"></i>
+                    </div>
+                    <h4>DocuSeal</h4>
+                    <p>Prepara documento</p>
+                </div>
+                <div class="flow-arrow">
+                    <i data-lucide="arrow-right" style="width:20px;height:20px"></i>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i data-lucide="smartphone" style="width:28px;height:28px"></i>
+                    </div>
+                    <h4>OTP SMS</h4>
+                    <p>Firma con código</p>
+                </div>
+                <div class="flow-arrow">
+                    <i data-lucide="arrow-right" style="width:20px;height:20px"></i>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-icon">
+                        <i data-lucide="archive" style="width:28px;height:28px"></i>
+                    </div>
+                    <h4>Almacenamiento</h4>
+                    <p>Guarda y audita</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits -->
+    <section id="beneficios">
+        <div class="section-label">Beneficios</div>
+        <h2 class="section-title">Ventajas medibles para su operación</h2>
+        <p class="section-subtitle">
+            La transformación digital de los NEPs genera impacto inmediato en múltiples dimensiones.
+        </p>
+
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i data-lucide="clock" style="width:24px;height:24px"></i>
+                </div>
+                <h3>Ahorro de Tiempo</h3>
+                <p>Reduce el tiempo de firma de horas a minutos. Elimina desplazamientos, impresiones y escaneos innecesarios.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i data-lucide="activity" style="width:24px;height:24px"></i>
+                </div>
+                <h3>Trazabilidad Total</h3>
+                <p>Cada firma queda registrada con timestamp, IP, y evidencia del OTP. Auditoría completa disponible.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i data-lucide="scale" style="width:24px;height:24px"></i>
+                </div>
+                <h3>Validez Legal</h3>
+                <p>DocuSeal cumple eIDAS. Las firmas con OTP tienen validez legal en la UE para documentos administrativos.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i data-lucide="trending-down" style="width:24px;height:24px"></i>
+                </div>
+                <h3>Reducción de Costes</h3>
+                <p>Elimina papel, tinta, mantenimiento de impresoras, y tiempo administrativo dedicado al proceso manual.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i data-lucide="zap" style="width:24px;height:24px"></i>
+                </div>
+                <h3>Experiencia del Cliente</h3>
+                <p>Los clientes firman desde cualquier dispositivo sin instalar nada. Proceso fluido y profesional.</p>
+            </div>
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i data-lucide="lock" style="width:24px;height:24px"></i>
+                </div>
+                <h3>Seguridad</h3>
+                <p>Autenticación de doble factor con SMS. Documentos cifrados en reposo y en tránsito.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture -->
+    <section class="arch-section" id="arquitectura">
+        <div class="section-inner">
+            <div class="section-label">Arquitectura</div>
+            <h2 class="section-title">Diseño modular y escalable</h2>
+            <p class="section-subtitle">
+                Cada componente cumple una función específica. El sistema puede crecer con su operación.
+            </p>
+
+            <div class="arch-diagram">
+                <div class="arch-row">
+                    <div class="arch-component">
+                        <div class="icon"><i data-lucide="monitor" style="width:24px;height:24px"></i></div>
+                        <h4>Zunzun</h4>
+                        <div class="tag">Sistema Legacy</div>
+                    </div>
+                    <div class="arch-component">
+                        <div class="icon"><i data-lucide="code-2" style="width:24px;height:24px"></i></div>
+                        <h4>API Bridge</h4>
+                        <div class="tag">FastAPI + SQL Server</div>
+                    </div>
+                    <div class="arch-component">
+                        <div class="icon"><i data-lucide="file-signature" style="width:24px;height:24px"></i></div>
+                        <h4>DocuSeal</h4>
+                        <div class="tag">Open Source</div>
+                    </div>
+                </div>
+                <div class="arch-connector">
+                    <i data-lucide="arrow-down" style="width:20px;height:20px"></i>
+                </div>
+                <div class="arch-row">
+                    <div class="arch-component">
+                        <div class="icon"><i data-lucide="message-square" style="width:24px;height:24px"></i></div>
+                        <h4>LabsMobile</h4>
+                        <div class="tag">OTP SMS</div>
+                    </div>
+                    <div class="arch-component">
+                        <div class="icon"><i data-lucide="hard-drive" style="width:24px;height:24px"></i></div>
+                        <h4>Almacenamiento</h4>
+                        <div class="tag">Cloud Seguro</div>
+                    </div>
+                    <div class="arch-component">
+                        <div class="icon"><i data-lucide="bar-chart-3" style="width:24px;height:24px"></i></div>
+                        <h4>Dashboard</h4>
+                        <div class="tag">React + Admin</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stack -->
+    <section>
+        <div class="section-label">Stack Tecnológico</div>
+        <h2 class="section-title">Tecnologías probadas y sostenibles</h2>
+        <p class="section-subtitle">
+            Seleccionamos herramientas open source maduras con comunidad activa y documentación sólida.
+        </p>
+
+        <div class="stack-grid">
+            <div class="stack-card">
+                <div class="stack-logo">DS</div>
+                <h4>DocuSeal</h4>
+                <p>Firma digital open source</p>
+            </div>
+            <div class="stack-card">
+                <div class="stack-logo">Py</div>
+                <h4>FastAPI</h4>
+                <p>Backend & API bridge</p>
+            </div>
+            <div class="stack-card">
+                <div class="stack-logo">Re</div>
+                <h4>React</h4>
+                <p>Dashboard & interfaz</p>
+            </div>
+            <div class="stack-card">
+                <div class="stack-logo">SQL</div>
+                <h4>SQL Server</h4>
+                <p>Datos existentes</p>
+            </div>
+            <div class="stack-card">
+                <div class="stack-logo">SMS</div>
+                <h4>LabsMobile</h4>
+                <p>OTP por SMS</p>
+            </div>
+            <div class="stack-card">
+                <div class="stack-logo">Do</div>
+                <h4>Docker</h4>
+                <p>Despliegue containerizado</p>
+            </div>
+            <div class="stack-card">
+                <div class="stack-logo">Ng</div>
+                <h4>Nginx</h4>
+                <p>Proxy & SSL</p>
+            </div>
+            <div class="stack-card">
+                <div class="stack-logo">Pg</div>
+                <h4>PostgreSQL</h4>
+                <p>Base de firma digital</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Costs -->
+    <section class="costs-section" id="costes">
+        <div class="section-inner">
+            <div class="section-label">Análisis de Costes</div>
+            <h2 class="section-title">Inversión mensual estimada</h2>
+            <p class="section-subtitle">
+                Comparativa aproximada entre el coste operativo actual y la solución propuesta.
+            </p>
+
+            <div class="cost-comparison">
+                <div class="cost-card current">
+                    <span class="badge">Actual</span>
+                    <h3>Coste Operativo Mensual</h3>
+                    <div class="cost-amount">~€180+</div>
+                    <p class="cost-note">Estimación conservadora</p>
+                    <ul>
+                        <li>
+                            <i data-lucide="x" style="width:14px;height:14px;color:var(--color-warning)"></i>
+                            Papel e impresión (~€40)
+                        </li>
+                        <li>
+                            <i data-lucide="x" style="width:14px;height:14px;color:var(--color-warning)"></i>
+                            Tiempo administrativo (~€100)
+                        </li>
+                        <li>
+                            <i data-lucide="x" style="width:14px;height:14px;color:var(--color-warning)"></i>
+                            Correos y seguimiento (~€20)
+                        </li>
+                        <li>
+                            <i data-lucide="x" style="width:14px;height:14px;color:var(--color-warning)"></i>
+                            Almacenamiento físico (~€20)
+                        </li>
+                        <li>
+                            <i data-lucide="x" style="width:14px;height:14px;color:var(--color-warning)"></i>
+                            Errores y retrabajo (variable)
+                        </li>
+                    </ul>
+                </div>
+                <div class="cost-card proposed">
+                    <span class="badge">Propuesta</span>
+                    <h3>Coste Mensual Estimado</h3>
+                    <div class="cost-amount">~€75</div>
+                    <p class="cost-note">Con 50 NEPs/mes</p>
+                    <ul>
+                        <li>
+                            <i data-lucide="check" style="width:14px;height:14px;color:var(--color-success)"></i>
+                            VPS + hosting (~€20)
+                        </li>
+                        <li>
+                            <i data-lucide="check" style="width:14px;height:14px;color:var(--color-success)"></i>
+                            LabsMobile SMS (~€25)
+                        </li>
+                        <li>
+                            <i data-lucide="check" style="width:14px;height:14px;color:var(--color-success)"></i>
+                            DocuSeal open source (€0)
+                        </li>
+                        <li>
+                            <i data-lucide="check" style="width:14px;height:14px;color:var(--color-success)"></i>
+                            Mantenimiento (~€30)
+                        </li>
+                        <li>
+                            <i data-lucide="check" style="width:14px;height:14px;color:var(--color-success)"></i>
+                            Setup inicial (one-time)
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline -->
+    <section id="timeline">
+        <div class="section-label">Timeline</div>
+        <h2 class="section-title">Plan de implementación</h2>
+        <p class="section-subtitle">
+            Dos fases claras: un MVP funcional en 2-3 semanas, y robustecimiento posterior.
+        </p>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-dot">1</div>
+                <div class="timeline-content">
+                    <h3>Análisis y Setup</h3>
+                    <p>Revisión de requisitos, acceso al sistema Zunzun, configuración del entorno Docker, y preparación de la infraestructura base.</p>
+                    <span class="timeline-meta">Semana 1</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">2</div>
+                <div class="timeline-content">
+                    <h3>Integración Zunzun → DocuSeal</h3>
+                    <p>Desarrollo del API Bridge en FastAPI. Conexión con SQL Server, extracción de datos NEP, y generación de documentos en DocuSeal.</p>
+                    <span class="timeline-meta">Semana 1-2</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">3</div>
+                <div class="timeline-content">
+                    <h3>OTP y Flujo de Firma</h3>
+                    <p>Integración con LabsMobile para envío de OTP. Desarrollo del flujo de firma: generación, envío, verificación y confirmación.</p>
+                    <span class="timeline-meta">Semana 2-3</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">4</div>
+                <div class="timeline-content">
+                    <h3>MVP en Producción</h3>
+                    <p>Despliegue en VPS con Nginx y SSL. Pruebas end-to-end con NEPs reales. Capacitación del equipo operativo.</p>
+                    <span class="timeline-meta">Semana 3</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">5</div>
+                <div class="timeline-content">
+                    <h3>Dashboard y Robustecimiento</h3>
+                    <p>Panel de administración en React para visualizar firmas, descargar documentos, y gestionar usuarios. Monitoreo y logs.</p>
+                    <span class="timeline-meta">Semana 4-5</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="section-inner">
+            <h2>¿Listo para digitalizar sus NEPs?</h2>
+            <p>Comience con un MVP en 2-3 semanas y vea resultados inmediatos en su operación diaria.</p>
+            <a href="mailto:contacto@weaves.es?subject=Demo%20Firma%20Digital%20NEPs" class="btn btn-primary" style="font-size:1rem;padding:1.25rem 2.5rem;">
+                Solicitar Demo
+                <i data-lucide="arrow-right" style="width:18px;height:18px"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <a href="#" class="logo">Weaves</a>
+        <p>Propuesta técnica · Firma Digital de NEPs · 2025</p>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe cards
+        document.querySelectorAll('.benefit-card, .stack-card, .timeline-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
